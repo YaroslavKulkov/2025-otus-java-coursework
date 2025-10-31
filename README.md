@@ -1,1 +1,2 @@
-# 2025-otus-java-coursework
+## Разработка простого фреймворка ORM с интеграцией с компонентом TableView в JavaFX
+### 2025-04-otus-java
