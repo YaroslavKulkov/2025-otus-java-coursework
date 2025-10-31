@@ -1,5 +1,8 @@
 package ru.otus.jdbc.mapper;
 
+import javafx.scene.control.TableColumn;
+import ru.otus.jdbc.annotations.Column;
+import ru.otus.jdbc.annotations.Entity;
 import ru.otus.jdbc.annotations.Id;
 
 import java.lang.reflect.Constructor;
@@ -7,6 +10,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class EntityClassMetaDataImpl<T> implements EntityClassMetaData<T> {
     private final Class<T> entityClass;
@@ -46,12 +50,70 @@ public class EntityClassMetaDataImpl<T> implements EntityClassMetaData<T> {
         return fieldsWithoutId;
     }
 
+    @Override
+    public Field getFieldForColumn(String columnId) {
+        return allFields.stream()
+                .filter(field -> isColumnField(field))
+                .filter(field -> columnId.equals(getColumnId(field)))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException(
+                        "No field found for column id: " + columnId +
+                                " in entity: " + entityClass.getName()
+                ));
+    }
+
+    private String getColumnId(Field field) {
+        Column columnAnnotation = field.getAnnotation(Column.class);
+        if (columnAnnotation != null && !columnAnnotation.name().isEmpty()) {
+            return columnAnnotation.name();
+        }
+        return field.getName();
+    }
+
+    private List<String> getAvailableColumnIds() {
+        return allFields.stream()
+                .filter(field -> isColumnField(field))
+                .map(this::getColumnId)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void validateColumns(List<TableColumn<T, ?>> columns) {
+        for (TableColumn<T, ?> column : columns) {
+            String columnId = column.getId();
+            if (columnId == null || columnId.trim().isEmpty()) {
+                throw new RuntimeException("TableColumn must have id attribute in FXML");
+            }
+
+            try {
+                getFieldForColumn(columnId);
+            } catch (RuntimeException e) {
+                throw new RuntimeException("Column id '" + columnId + "' does not match any field in entity " +
+                        entityClass.getName() + ". Available fields: " + getAvailableColumnIds());
+            }
+        }
+    }
+
     private void initializeFields() {
-        className = entityClass.getSimpleName();
+        //className = entityClass.getSimpleName();
+        className = extractTableName();
+
         allFields = List.of(entityClass.getDeclaredFields());
         initConstructorName();
         initIdField();
         initFieldsWithoutId();
+    }
+
+    private String extractTableName() {
+        Entity entityAnnotation = entityClass.getAnnotation(Entity.class);
+        if (entityAnnotation != null) {
+            String tableNameFromAnnotation = entityAnnotation.tableName();
+            if (tableNameFromAnnotation != null && !tableNameFromAnnotation.trim().isEmpty()) {
+                return tableNameFromAnnotation.trim();
+            }
+        }
+        // Если аннотации нет или tableName пустое, возвращаем имя класса
+        return entityClass.getSimpleName();
     }
 
     private void initFieldsWithoutId() {

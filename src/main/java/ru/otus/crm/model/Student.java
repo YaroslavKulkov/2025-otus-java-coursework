@@ -7,10 +7,8 @@ import lombok.ToString;
 import ru.otus.jdbc.annotations.Column;
 import ru.otus.jdbc.annotations.Entity;
 import ru.otus.jdbc.annotations.Id;
-import ru.otus.jdbc.annotations.Table;
 
-@Entity
-@Table(name = "students")
+@Entity(tableName = "students")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data

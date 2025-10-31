@@ -8,7 +8,7 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.otus.ormfx.MainController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.otus.ormfx.MainController">
    <children>
       <SplitPane dividerPositions="0.29797979797979796" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <items>
@@ -26,11 +26,11 @@
                <children>
                   <TableView fx:id="tvMainTable" prefHeight="398.0" prefWidth="416.0" AnchorPane.bottomAnchor="2.0" AnchorPane.leftAnchor="2.0" AnchorPane.rightAnchor="2.0" AnchorPane.topAnchor="2.0">
                      <columns>
-                        <TableColumn fx:id="firstNameColumn" prefWidth="75.0" text="%column.first_name" />
-                        <TableColumn fx:id="lastNameColumn" prefWidth="75.0" text="%column.last_name" />
-                        <TableColumn fx:id="courseColumn" prefWidth="75.0" text="%column.group_title" />
-                        <TableColumn fx:id="groupColumn" prefWidth="75.0" text="%column.email" />
-                        <TableColumn fx:id="mailColumn" prefWidth="75.0" text="%column.course" />
+                        <TableColumn fx:id="first_name" prefWidth="75.0" text="%column.first_name" />
+                        <TableColumn fx:id="last_name" prefWidth="75.0" text="%column.last_name" />
+                        <TableColumn fx:id="group_title" prefWidth="75.0" text="%column.group_title" />
+                        <TableColumn fx:id="email" prefWidth="75.0" text="%column.email" />
+                        <TableColumn fx:id="course" prefWidth="75.0" text="%column.course" />
                      </columns>
                      <columnResizePolicy>
                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />

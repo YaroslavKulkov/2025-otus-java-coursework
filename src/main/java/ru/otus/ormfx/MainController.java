@@ -1,6 +1,8 @@
 package ru.otus.ormfx;
 
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -32,9 +34,12 @@ public class MainController {
     private TextArea taInfo;
 
     @FXML
-    private TableView<?> tvMainTable;
+    private TableView<Student> tvMainTable;
     @FXML
     private Label lblInfo;
+
+    private ObservableList<Student> studentsObservable = FXCollections.observableArrayList();
+
 
     private final List<Student> students = new ArrayList<>();
 
@@ -49,26 +54,25 @@ public class MainController {
     private void initialize() {
         initStudents();
 
-        var dataSource = MainApplication.getDataSource();
-        var transactionRunner = new TransactionRunnerJdbc(dataSource); // оборачивает запрос в транзакцию
-        var dbExecutor = new DbExecutorImpl(); // непосредственно выполняет запрос
+        EntityClassMetaData<Student> studentMetaData = new EntityClassMetaDataImpl<>(Student.class);
+        EntitySQLMetaData entitySQLMetaData = new EntitySQLMetaDataImpl(studentMetaData);
 
-        EntityClassMetaData<Student> entityClassMetaDataStudent = new EntityClassMetaDataImpl<>(Student.class);
-        EntitySQLMetaData entitySQLMetaDataStudent = new EntitySQLMetaDataImpl(entityClassMetaDataStudent);
-        var dataTemplateStudent = new DataTemplateJdbc<Student>(
-                dbExecutor,
-                entitySQLMetaDataStudent,
-                entityClassMetaDataStudent);
-        System.out.println(entitySQLMetaDataStudent.getSelectAllSql());
-        System.out.println(entitySQLMetaDataStudent.getInsertSql());
-        System.out.println(entitySQLMetaDataStudent.getSelectByIdSql());
-        System.out.println(entitySQLMetaDataStudent.getUpdateSql());
+        TableViewBuilder.bindTableView(tvMainTable, Student.class, studentMetaData);
+        var transactionRunner = new TransactionRunnerJdbc(MainApplication.getDataSource());
+        var dbExecutor = new DbExecutorImpl();
+
+        EntityManagerImpl<Student> em = new EntityManagerImpl<>(transactionRunner, dbExecutor, studentMetaData, entitySQLMetaData);
+
+        TableViewBuilder.bindTableView(tvMainTable, Student.class, studentMetaData);
+        studentsObservable.addAll(students);
+        tvMainTable.setItems(studentsObservable);
+
+        studentsObservable = em.createBoundList(Student.class, tvMainTable);
+
+
 
         lblInfo.setText("Инициализация прошла успешно");
-        var columns = tvMainTable.getColumns();
-        var column = columns.get(0);
-        System.out.println(column.getId());
-        tvMainTable = new TableView<Student>();
+
     }
 
 

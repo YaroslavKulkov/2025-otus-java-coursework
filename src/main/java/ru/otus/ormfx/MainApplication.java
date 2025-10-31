@@ -61,7 +61,7 @@ public class MainApplication extends Application {
         log.info("db migration started...");
         var flyway = Flyway.configure()
                 .dataSource(dataSource)
-                .locations("classpath:/db/migration")
+                .locations("classpath:/migration")
                 .load();
         flyway.migrate();
         log.info("db migration finished.");
