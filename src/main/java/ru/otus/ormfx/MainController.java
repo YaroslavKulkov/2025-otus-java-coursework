@@ -96,7 +96,7 @@ public class MainController {
         var addStage = new Stage();
         addStage.setTitle("Информация о студенте");
         addStage.initModality(Modality.WINDOW_MODAL);
-        addStage.initOwner(MainApplication.getStage());
+        addStage.initOwner(StageManager.getPrimaryStage());
         var scene = new Scene(pane);
         addStage.setScene(scene);
         NewStudentController controller = loader.getController();

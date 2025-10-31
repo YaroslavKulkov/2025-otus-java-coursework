@@ -10,7 +10,7 @@ public class EntitySQLMetaDataImpl implements EntitySQLMetaData {
     private final String tableName;
     private final String idFieldName;
 
-    private String selectAllSql = "";
+    private String selectAllSql;
     private String selectByIdSql;
     private String insertSql;
     private String updateSql;

@@ -12,7 +12,9 @@ import ru.otus.crm.datasource.DriverManagerDataSource;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.Properties;
+import java.util.ResourceBundle;
 
 public class MainApplication extends Application {
     private static final Logger log = LoggerFactory.getLogger(MainApplication.class);
@@ -22,11 +24,6 @@ public class MainApplication extends Application {
     private static final String PASSWORD = "postgres";
 
     private static DriverManagerDataSource dataSource;
-    private static Stage stage;
-
-    public static Stage getStage() {
-        return stage;
-    }
 
     public static DriverManagerDataSource getDataSource() {
         return dataSource;
@@ -52,8 +49,8 @@ public class MainApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         StageManager.setPrimaryStage(stage);
-        this.stage = stage;
-        FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("main-view.fxml"));
+        ResourceBundle bundle = ResourceBundle.getBundle("main", Locale.getDefault());
+        FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("main-view.fxml"), bundle);
         Scene scene = new Scene(fxmlLoader.load(), 600, 400);
         stage.setTitle("Demo Application");
         stage.setScene(scene);

@@ -12,10 +12,22 @@ import lombok.Setter;
 import ru.otus.crm.model.Student;
 
 public class NewStudentController {
-    public TextField tfName;
-    public TextField tfLastName;
-    public TextField tfAge;
-    public Button btOk;
+    @FXML
+    private TextField tfCourse;
+
+    @FXML
+    private TextField tfGroup;
+
+    @FXML
+    private TextField tfLastName;
+
+    @FXML
+    private TextField tfMail;
+
+    @FXML
+    private TextField tfName;
+
+
     private Student student;
     @Setter
     private Stage stage;
@@ -27,14 +39,18 @@ public class NewStudentController {
         this.student = student;
         tfName.setText(student.getFirstName());
         tfLastName.setText(student.getLastName());
-        tfAge.setText(String.valueOf(student.getCourse()));
+        tfMail.setText(student.getMail());
+        tfGroup.setText(student.getGroup());
+        tfCourse.setText(String.valueOf(student.getCourse()));
     }
 
     public void onOkButtonClick(ActionEvent actionEvent) {
 
         student.setFirstName(tfName.getText());
         student.setLastName(tfLastName.getText());
-        student.setCourse(Integer.parseInt(tfAge.getText()));
+        student.setMail(tfMail.getText());
+        student.setGroup(tfGroup.getText());
+        student.setCourse(Integer.parseInt(tfCourse.getText()));
         stage.close();
 
     }
