@@ -33,7 +33,7 @@ public class DataTemplateJdbc<T> implements DataTemplate<T> {
     @Override
     public Optional<T> findById(Connection connection, long id) {
         return dbExecutor.executeSelect(
-                connection, entitySQLMetaData.getSelectByIdSql(), List.of(id), this::createEntityFromRS);
+                connection, entitySQLMetaData.getSelectByIdSql(), List.of(id), rs -> createListOfEntityFromRS(rs).getFirst());
     }
 
     @Override
@@ -88,7 +88,7 @@ public class DataTemplateJdbc<T> implements DataTemplate<T> {
         }
     }
 
-    private T createEntityFromRS(ResultSet rs) {
+/*    private T createEntityFromRS(ResultSet rs) {
         try {
             if (rs.next()) {
                 return createEntityFromCurrentRow(rs);
@@ -97,7 +97,7 @@ public class DataTemplateJdbc<T> implements DataTemplate<T> {
         } catch (SQLException e) {
             throw new DataTemplateException(e);
         }
-    }
+    }*/
 
     private List<T> createListOfEntityFromRS(ResultSet rs) {
         try {

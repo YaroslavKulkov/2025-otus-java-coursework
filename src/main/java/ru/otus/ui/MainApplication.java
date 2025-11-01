@@ -50,7 +50,7 @@ public class MainApplication extends Application {
         StageManager.setPrimaryStage(stage);
         ResourceBundle bundle = ResourceBundle.getBundle("main", Locale.getDefault());
         FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("main-view.fxml"), bundle);
-        Scene scene = new Scene(fxmlLoader.load(), 600, 400);
+        Scene scene = new Scene(fxmlLoader.load(), 700, 400);
         stage.setTitle("Demo Application");
         stage.setScene(scene);
         log.info("Main application started with locale {}", Locale.getDefault().toLanguageTag());
