@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import ru.otus.core.repository.executor.DbExecutorImpl;
 import ru.otus.core.sessionmanager.TransactionRunnerJdbc;
 import ru.otus.crm.model.Student;
+import ru.otus.crm.repository.EntityManager;
 import ru.otus.crm.repository.EntityManagerImpl;
 import ru.otus.jdbc.mapper.*;
 import ru.otus.ui.MainApplication;
@@ -33,7 +34,7 @@ public class MainController {
     private TableView<Student> tvMainTable;
 
     private ObservableList<Student> studentsObservable;
-    private EntityManagerImpl<Student> em;
+    private EntityManager<Student> em;
 
     @FXML
     private void initialize() {
@@ -46,10 +47,8 @@ public class MainController {
         var dataTemplate = new DataTemplateJdbc<>(dbExecutor, entitySQLMetaData, studentMetaData);
 
         em = new EntityManagerImpl<>(transactionRunner, dbExecutor, studentMetaData, entitySQLMetaData, dataTemplate);
-
         TableViewBuilder.bindTableView(tvMainTable, studentMetaData);
         studentsObservable = em.createBoundList(tvMainTable);
-        tvMainTable.setItems(studentsObservable);
 
         tvMainTable.setOnMouseClicked(event -> {
             if (event.getClickCount() == 2) {

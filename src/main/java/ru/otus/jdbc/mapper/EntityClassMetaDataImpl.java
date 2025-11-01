@@ -78,7 +78,6 @@ public class EntityClassMetaDataImpl<T> implements EntityClassMetaData<T> {
             if (columnId == null || columnId.trim().isEmpty()) {
                 throw new EntityProcessingException("TableColumn must have id attribute in FXML");
             }
-
             try {
                 getFieldForColumn(columnId);
             } catch (RuntimeException e) {
