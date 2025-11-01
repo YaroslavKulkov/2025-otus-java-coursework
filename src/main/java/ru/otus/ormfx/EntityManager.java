@@ -1,15 +1,16 @@
 package ru.otus.ormfx;
 
 import javafx.collections.ObservableList;
+import javafx.scene.control.TableView;
 
 public interface EntityManager<T> {
-    <T> ObservableList<T> findAll();
+    ObservableList<T> createBoundList(TableView<T> tableView);
 
-    <T> void save(T entity);
+    //Map<Field, String> getFieldToColumnNameMap();
 
-    <T> void update(T entity);
+    ObservableList<T> findAll();
 
-    <T> void delete(T entity);
+    T save(T entity);
 
-    <T> T findById(Class<T> entityClass, Object id);
+    void delete(T entity);
 }

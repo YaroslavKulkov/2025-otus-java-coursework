@@ -19,8 +19,6 @@ import java.util.Optional;
 @SuppressWarnings("java:S1068")
 public class DataTemplateJdbc<T> implements DataTemplate<T> {
 
-    // Значения в поля будет записывать напрямую через рефлексию, а не через сеттеры
-
     private final DbExecutor dbExecutor;
     private final EntitySQLMetaData entitySQLMetaData;
     private final EntityClassMetaData<T> entityClassMetaData;
@@ -112,19 +110,6 @@ public class DataTemplateJdbc<T> implements DataTemplate<T> {
             throw new DataTemplateException(e);
         }
     }
-
-/*    private T createEntityFromCurrentRow(ResultSet rs) {
-        try {
-            T entity = entityClassMetaData.getConstructor().newInstance();
-            for (Field field : entityClassMetaData.getAllFields()) {
-                field.setAccessible(true);
-                field.set(entity, rs.getObject(field.getName()));
-            }
-            return entity;
-        } catch (SQLException | ReflectiveOperationException e) {
-            throw new DataTemplateException(e);
-        }
-    }*/
 
     private T createEntityFromCurrentRow(ResultSet rs) {
         try {

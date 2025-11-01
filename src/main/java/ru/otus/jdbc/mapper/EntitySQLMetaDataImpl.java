@@ -11,17 +11,21 @@ public class EntitySQLMetaDataImpl implements EntitySQLMetaData {
     private final String tableName;
     private final String idFieldName;
 
-    private String selectAllSql;
-    private String selectByIdSql;
-    private String insertSql;
-    private String updateSql;
-    private String deleteSql;
+    private final String selectAllSql;
+    private final String selectByIdSql;
+    private final String insertSql;
+    private final String updateSql;
+    private final String deleteSql;
 
     public EntitySQLMetaDataImpl(EntityClassMetaData<?> entityMetaData) {
         this.entityMetaData = entityMetaData;
         this.tableName = entityMetaData.getName().toLowerCase();
         idFieldName = findIdFieldName();
-        initializeSQLQuery();
+        selectAllSql = initSelectAllSql();
+        selectByIdSql = initSelectByIdSql();
+        insertSql = initInsertSql();
+        updateSql = initUpdateSql();
+        deleteSql = initDeleteSql();
     }
 
     @Override
@@ -49,33 +53,25 @@ public class EntitySQLMetaDataImpl implements EntitySQLMetaData {
         return deleteSql;
     }
 
-    private void initializeSQLQuery() {
-        initSelectAllSql();
-        initSelectByIdSql();
-        initInsertSql();
-        initUpdateSql();
-        initDeleteSql();
+    private String initDeleteSql() {
+        return "DELETE FROM " + tableName + " WHERE " + idFieldName + " = ?";
     }
 
-    private void initDeleteSql() {
-        deleteSql = "DELETE FROM " + tableName + " WHERE " + idFieldName + " = ?";
+    private String initUpdateSql() {
+        return "UPDATE " + tableName + " SET " + generateUpdateClause() + " WHERE " + idFieldName + " = ?";
     }
 
-    private void initUpdateSql() {
-        updateSql = "UPDATE " + tableName + " SET " + generateUpdateClause() + " WHERE " + idFieldName + " = ?";
-    }
-
-    private void initInsertSql() {
-        insertSql = "INSERT INTO " + tableName + "(" + generateListOfFieldsName() + ") VALUES("
+    private String initInsertSql() {
+        return "INSERT INTO " + tableName + "(" + generateListOfFieldsName() + ") VALUES("
                 + generatePlaceHolders(entityMetaData.getFieldsWithoutId().size()) + ")";
     }
 
-    private void initSelectByIdSql() {
-        selectByIdSql = "SELECT " + generateListOfFields() + " FROM " + tableName + " WHERE " + idFieldName + " = ?";
+    private String initSelectByIdSql() {
+        return "SELECT " + generateListOfFields() + " FROM " + tableName + " WHERE " + idFieldName + " = ?";
     }
 
-    private void initSelectAllSql() {
-        selectAllSql = "SELECT * FROM " + tableName;
+    private String initSelectAllSql() {
+        return "SELECT * FROM " + tableName;
     }
 
     private String findIdFieldName() {
@@ -86,14 +82,10 @@ public class EntitySQLMetaDataImpl implements EntitySQLMetaData {
                 .orElseThrow(() -> new EntityProcessingException("Entity class must have a field annotated with @Id"));
     }
 
-/*    private String generateListOfFieldsName() {
-        return entityMetaData.getFieldsWithoutId().stream().map(Field::getName).collect(Collectors.joining(", "));
-    }*/
-
     private String generateListOfFieldsName() {
         Map<Field, String> fieldToColumnMap = entityMetaData.getFieldToColumnNameMap();
         return entityMetaData.getFieldsWithoutId().stream()
-                .map(field -> fieldToColumnMap.get(field))
+                .map(fieldToColumnMap::get)
                 .collect(Collectors.joining(", "));
     }
 
@@ -101,11 +93,6 @@ public class EntitySQLMetaDataImpl implements EntitySQLMetaData {
         return String.join(", ", "?".repeat(size).split(""));
     }
 
-    /*    private String generateUpdateClause() {
-            return entityMetaData.getFieldsWithoutId().stream()
-                    .map(field -> field.getName() + " = ?")
-                    .collect(Collectors.joining(", "));
-        }*/
     private String generateUpdateClause() {
         Map<Field, String> fieldToColumnMap = entityMetaData.getFieldToColumnNameMap();
         return entityMetaData.getFieldsWithoutId().stream()
@@ -114,11 +101,9 @@ public class EntitySQLMetaDataImpl implements EntitySQLMetaData {
     }
 
     private String generateListOfFields() {
-//        var fields = entityMetaData.getAllFields();
-//        return fields.stream().map(Field::getName).collect(Collectors.joining(", "));
         var fields = entityMetaData.getAllFields();
         return fields.stream()
-                .map(field -> entityMetaData.getFieldToColumnNameMap().get(field)) // Берем значение из Map
+                .map(field -> entityMetaData.getFieldToColumnNameMap().get(field))
                 .collect(Collectors.joining(", "));
     }
 }

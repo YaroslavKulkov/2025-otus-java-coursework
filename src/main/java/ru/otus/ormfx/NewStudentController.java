@@ -1,13 +1,9 @@
 package ru.otus.ormfx;
 
-import javafx.animation.TranslateTransition;
-import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.stage.Popup;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import lombok.Setter;
 import ru.otus.crm.model.Student;
 
@@ -32,9 +28,6 @@ public class NewStudentController {
     @Setter
     private Stage stage;
 
-    @FXML
-    void initialize(){}
-
     public void setStudent(Student student) {
         this.student = student;
         tfName.setText(student.getFirstName());
@@ -44,8 +37,7 @@ public class NewStudentController {
         tfCourse.setText(String.valueOf(student.getCourse()));
     }
 
-    public void onOkButtonClick(ActionEvent actionEvent) {
-
+    public void onOkButtonClick() {
         student.setFirstName(tfName.getText());
         student.setLastName(tfLastName.getText());
         student.setMail(tfMail.getText());
@@ -55,7 +47,7 @@ public class NewStudentController {
 
     }
 
-    public void onCancelButtonClick(ActionEvent actionEvent) {
+    public void onCancelButtonClick() {
         stage.close();
     }
 }

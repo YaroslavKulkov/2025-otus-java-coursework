@@ -12,26 +12,31 @@ import java.util.stream.Collectors;
 
 public class EntityClassMetaDataImpl<T> implements EntityClassMetaData<T> {
     private final Class<T> entityClass;
-    private Constructor<T> constructor;
-    private Field idField;
-    private List<Field> allFields;
-    private List<Field> fieldsWithoutId;
-    private String className;
-
-    private Map<Field, String> fieldToColumnNameMap = new HashMap<>();
+    private final Constructor<T> constructor;
+    private final Field idField;
+    private final List<Field> allFields;
+    private final List<Field> fieldsWithoutId;
+    private final String tableName;
+    private final Map<Field, String> fieldToColumnNameMap = new HashMap<>();
 
     public EntityClassMetaDataImpl(Class<T> entityClass) {
         this.entityClass = Objects.requireNonNull(entityClass, "Entity class cannot be null");
-        initializeFields();
+        this.tableName = extractTableName();
+        this.allFields = List.of(entityClass.getDeclaredFields());
+        initFieldToColumnNameMapping();
+        this.constructor = initConstructorName();
+        this.idField = initIdField();
+        this.fieldsWithoutId = initFieldsWithoutId();
     }
 
+    @Override
     public Map<Field, String> getFieldToColumnNameMap() {
         return fieldToColumnNameMap;
     }
 
     @Override
     public String getName() {
-        return className;
+        return tableName;
     }
 
     @Override
@@ -66,6 +71,23 @@ public class EntityClassMetaDataImpl<T> implements EntityClassMetaData<T> {
                 ));
     }
 
+    @Override
+    public void validateColumns(List<TableColumn<T, ?>> columns) {
+        for (TableColumn<T, ?> column : columns) {
+            var columnId = column.getId();
+            if (columnId == null || columnId.trim().isEmpty()) {
+                throw new EntityProcessingException("TableColumn must have id attribute in FXML");
+            }
+
+            try {
+                getFieldForColumn(columnId);
+            } catch (RuntimeException e) {
+                throw new EntityProcessingException("Column id '" + columnId + "' does not match any field in entity " +
+                        entityClass.getName() + ". Available fields: " + getAvailableColumnIds());
+            }
+        }
+    }
+
     private String getColumnId(Field field) {
         Column columnAnnotation = field.getAnnotation(Column.class);
         if (columnAnnotation != null && !columnAnnotation.name().isEmpty()) {
@@ -81,38 +103,8 @@ public class EntityClassMetaDataImpl<T> implements EntityClassMetaData<T> {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public void validateColumns(List<TableColumn<T, ?>> columns) {
-        for (TableColumn<T, ?> column : columns) {
-            String columnId = column.getId();
-            if (columnId == null || columnId.trim().isEmpty()) {
-                throw new RuntimeException("TableColumn must have id attribute in FXML");
-            }
-
-            try {
-                getFieldForColumn(columnId);
-            } catch (RuntimeException e) {
-                throw new RuntimeException("Column id '" + columnId + "' does not match any field in entity " +
-                        entityClass.getName() + ". Available fields: " + getAvailableColumnIds());
-            }
-        }
-    }
-
-    private void initializeFields() {
-        //className = entityClass.getSimpleName();
-        className = extractTableName();
-
-        allFields = List.of(entityClass.getDeclaredFields());
-        initFieldToColumnNameMapping();
-
-        initConstructorName();
-        initIdField();
-        initFieldsWithoutId();
-    }
-
     private void initFieldToColumnNameMapping() {
         fieldToColumnNameMap.clear();
-
         for (Field field : allFields) {
             String columnName = extractColumnName(field);
             fieldToColumnNameMap.put(field, columnName);
@@ -127,12 +119,7 @@ public class EntityClassMetaDataImpl<T> implements EntityClassMetaData<T> {
                 return nameFromAnnotation.trim();
             }
         }
-        // Если аннотации @Column нет или name пустой, используем имя поля
         return field.getName();
-    }
-
-    public String getColumnName(Field field) {
-        return fieldToColumnNameMap.get(field);
     }
 
     private String extractTableName() {
@@ -143,26 +130,24 @@ public class EntityClassMetaDataImpl<T> implements EntityClassMetaData<T> {
                 return tableNameFromAnnotation.trim();
             }
         }
-        // Если аннотации нет или tableName пустое, возвращаем имя класса
         return entityClass.getSimpleName();
     }
 
-    private void initFieldsWithoutId() {
+    private List<Field> initFieldsWithoutId() {
         var idField = getIdField();
-        this.fieldsWithoutId =
-                getAllFields().stream().filter(field -> !field.equals(idField)).toList();
+        return getAllFields().stream().filter(field -> !field.equals(idField)).toList();
     }
 
-    private void initIdField() {
-        idField = Arrays.stream(entityClass.getDeclaredFields())
+    private Field initIdField() {
+        return Arrays.stream(entityClass.getDeclaredFields())
                 .filter(f -> f.isAnnotationPresent(Id.class))
                 .findFirst()
                 .orElseThrow(() -> new EntityProcessingException("Entity class must have a field annotated with @Id"));
     }
 
-    private void initConstructorName() {
+    private Constructor<T> initConstructorName() {
         try {
-            this.constructor = entityClass.getDeclaredConstructor();
+            return entityClass.getDeclaredConstructor();
         } catch (NoSuchMethodException e) {
             throw new EntityProcessingException("Default constructor not found.");
         }

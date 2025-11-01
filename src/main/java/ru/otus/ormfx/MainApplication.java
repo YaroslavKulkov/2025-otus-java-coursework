@@ -1,6 +1,7 @@
 package ru.otus.ormfx;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -19,10 +20,6 @@ import java.util.ResourceBundle;
 public class MainApplication extends Application {
     private static final Logger log = LoggerFactory.getLogger(MainApplication.class);
 
-    private static final String URL = "jdbc:postgresql://localhost:5430/demoDB";
-    private static final String USER = "postgres";
-    private static final String PASSWORD = "postgres";
-
     private static DriverManagerDataSource dataSource;
 
     public static DriverManagerDataSource getDataSource() {
@@ -36,15 +33,15 @@ public class MainApplication extends Application {
                 .getResourceAsStream("database.properties")) {
             Properties props = new Properties();
             props.load(input);
+            log.info("Properties loaded. Connecting to database {}", props.getProperty("db.url"));
             this.dataSource = new DriverManagerDataSource(props.getProperty("db.url"), props.getProperty("db.username"), props.getProperty("db.password"));
 
         } catch (IOException e) {
-            //TODO кинуть свой exception
             log.error("Error while loading properties", e);
+            Platform.exit();
         }
         flywayMigrations(dataSource);
     }
-
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -54,6 +51,7 @@ public class MainApplication extends Application {
         Scene scene = new Scene(fxmlLoader.load(), 600, 400);
         stage.setTitle("Demo Application");
         stage.setScene(scene);
+        log.info("Main application started with locale {}", Locale.getDefault().toLanguageTag());
         stage.show();
     }
 

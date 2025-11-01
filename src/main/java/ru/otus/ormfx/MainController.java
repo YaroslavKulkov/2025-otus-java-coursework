@@ -1,13 +1,11 @@
 package ru.otus.ormfx;
 
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.stage.Modality;
@@ -20,26 +18,21 @@ import ru.otus.crm.model.Student;
 import ru.otus.jdbc.mapper.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+
 
 public class MainController {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
+
     @FXML
     private TextArea taInfo;
-
     @FXML
     private TableView<Student> tvMainTable;
-    @FXML
-    private Label lblInfo;
 
     private ObservableList<Student> studentsObservable;
-
     private EntityManagerImpl<Student> em;
 
     @FXML
     private void initialize() {
-
         EntityClassMetaData<Student> studentMetaData = new EntityClassMetaDataImpl<>(Student.class);
         EntitySQLMetaData entitySQLMetaData = new EntitySQLMetaDataImpl(studentMetaData);
         System.out.println(entitySQLMetaData.getSelectAllSql());
@@ -50,13 +43,12 @@ public class MainController {
 
         em = new EntityManagerImpl<>(transactionRunner, dbExecutor, studentMetaData, entitySQLMetaData, dataTemplate);
 
-        TableViewBuilder.bindTableView(tvMainTable, Student.class, studentMetaData);
-
-        studentsObservable = em.createBoundList(Student.class, tvMainTable);
+        TableViewBuilder.bindTableView(tvMainTable, studentMetaData);
+        studentsObservable = em.createBoundList(tvMainTable);
         tvMainTable.setItems(studentsObservable);
 
-
-        lblInfo.setText("Инициализация прошла успешно");
+        log.info("Initialization of component successful completed");
+        taInfo.setText(String.format("Инициализация прошла успешно, загружено %d записей", studentsObservable.size()));
 
     }
 
@@ -65,7 +57,9 @@ public class MainController {
         var student = new Student(null, "", "", 1, "", "");
         showDialog(student);
         em.save(student);
-        taInfo.setText(studentsObservable.toString());
+        studentsObservable.add(student);
+        taInfo.setText("Добавлен студент " + student.getLastName() + " в группу " + student.getGroup());
+        log.info("Добавлен студент {}", student);
     }
 
     private void showDialog(Student student) {
@@ -73,11 +67,12 @@ public class MainController {
         loader.setLocation(
                 MainApplication.class.getResource("new-student.fxml")
         );
-        Parent pane = null;
+        Parent pane;
         try {
             pane = loader.load();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.error("Ошибка при загрузке fxml-файла", e);
+            return;
         }
         var addStage = new Stage();
         addStage.setTitle("Информация о студенте");
@@ -89,29 +84,32 @@ public class MainController {
         controller.setStage(addStage);
         controller.setStudent(student);
         addStage.showAndWait();
-
     }
 
     @FXML
     void onDeleteBtnClick() {
         Student student = tvMainTable.getSelectionModel().getSelectedItem();
+        log.info("Выбран для удаления {}", student);
         if (student == null) {
             return;
         }
         em.delete(student);
         studentsObservable.remove(student);
+        log.info("Удален студент {}", student);
+        taInfo.setText("Удален студент " + student.getLastName() + " из группы " + student.getGroup());
     }
 
     @FXML
     void onEditClick() {
         Student student = tvMainTable.getSelectionModel().getSelectedItem();
-
+        log.info("Выбран для редактирования {}", student);
         if (student == null) {
             return;
         }
         showDialog(student);
         em.save(student);
-
+        log.info("Сохранен измененный студент {}", student);
+        taInfo.setText("Сохранены изменения в студенте " + student.getLastName() + " в группе " + student.getGroup());
         tvMainTable.refresh();
     }
 
