@@ -15,6 +15,7 @@ import ru.otus.crm.service.DbServiceClientImpl;
 import ru.otus.jdbc.annotations.Entity;
 import ru.otus.jdbc.mapper.DataTemplateJdbc;
 import ru.otus.jdbc.mapper.EntityClassMetaData;
+import ru.otus.jdbc.mapper.EntityProcessingException;
 import ru.otus.jdbc.mapper.EntitySQLMetaData;
 
 import java.lang.reflect.Field;
@@ -70,17 +71,15 @@ public class EntityManagerImpl<T>  {
                 Object id = idField.get(entity);
 
                 if (id == null) {
-                    // Вставка новой сущности
                     long newId = dataTemplate.insert(connection, entity);
                     idField.set(entity, newId);
                     return entity;
                 } else {
-                    // Обновление существующей сущности
                     dataTemplate.update(connection, entity);
                     return entity;
                 }
             } catch (IllegalAccessException e) {
-                throw new RuntimeException("Failed to access ID field", e);
+                throw new EntityProcessingException("Failed to access ID field");
             }
         });
     }
@@ -93,13 +92,14 @@ public class EntityManagerImpl<T>  {
                 Object id = idField.get(entity);
 
                 if (id != null) {
-                    dataTemplate.delete(connection, (T) id);
+                    //dataTemplate.delete(connection, (T) id);
+                    dataTemplate.delete(connection, entity);
                 } else {
                     throw new RuntimeException("Cannot delete entity with null ID");
                 }
                 return null;
             } catch (IllegalAccessException e) {
-                throw new RuntimeException("Failed to access ID field", e);
+                throw new EntityProcessingException("Failed to access ID field");
             }
         });
     }
