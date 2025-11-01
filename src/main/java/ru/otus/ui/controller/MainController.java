@@ -46,7 +46,7 @@ public class MainController {
         var dbExecutor = new DbExecutorImpl();
         var dataTemplate = new DataTemplateJdbc<>(dbExecutor, entitySQLMetaData, studentMetaData);
 
-        em = new EntityManagerImpl<>(transactionRunner, dbExecutor, studentMetaData, entitySQLMetaData, dataTemplate);
+        em = new EntityManagerImpl<>(transactionRunner, studentMetaData, dataTemplate);
         TableViewBuilder.bindTableView(tvMainTable, studentMetaData);
         studentsObservable = em.createBoundList(tvMainTable);
 

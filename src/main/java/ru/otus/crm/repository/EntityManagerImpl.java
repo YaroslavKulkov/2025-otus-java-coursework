@@ -13,22 +13,16 @@ import ru.otus.jdbc.mapper.EntitySQLMetaData;
 
 public class EntityManagerImpl<T>  implements EntityManager<T> {
     private final TransactionRunner transactionRunner;
-    private final DbExecutor dbExecutor;
     private final EntityClassMetaData<T> entityMetaData;
-    private final EntitySQLMetaData entitySQLMetaData;
     private final DataTemplate<T> dataTemplate;
 
-    public EntityManagerImpl(TransactionRunner transactionRunner, DbExecutor dbExecutor, EntityClassMetaData<T> entityMetaData, EntitySQLMetaData entitySQLMetaData, DataTemplate<T> dataTemplate) {
+    public EntityManagerImpl(TransactionRunner transactionRunner, EntityClassMetaData<T> entityMetaData, DataTemplate<T> dataTemplate) {
         this.transactionRunner = transactionRunner;
-        this.dbExecutor = dbExecutor;
         this.entityMetaData = entityMetaData;
-        this.entitySQLMetaData = entitySQLMetaData;
         this.dataTemplate = dataTemplate;
     }
 
     public ObservableList<T> findAll() {
-        var dataTemplate = new DataTemplateJdbc<T>(dbExecutor, entitySQLMetaData, entityMetaData);
-
         ObservableList<T> resultList = FXCollections.observableArrayList();
 
         var data = transactionRunner.doInTransaction(dataTemplate::findAll);
