@@ -16,15 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.otus.core.repository.executor.DbExecutorImpl;
 import ru.otus.core.sessionmanager.TransactionRunnerJdbc;
-import ru.otus.crm.model.Client;
-import ru.otus.crm.model.Manager;
 import ru.otus.crm.model.Student;
-import ru.otus.crm.service.DbServiceClientImpl;
-import ru.otus.crm.service.DbServiceManagerImpl;
 import ru.otus.jdbc.mapper.*;
-
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,10 +32,11 @@ public class MainController {
     @FXML
     private Label lblInfo;
 
-    private ObservableList<Student> studentsObservable = FXCollections.observableArrayList();
+    private ObservableList<Student> studentsObservable;// = FXCollections.observableArrayList();
 
 
     private final List<Student> students = new ArrayList<>();
+    private EntityManagerImpl<Student> em;
 
     private void initStudents() {
         students.add(new Student(1L, "Миша", "Зеленов", 1, "ИВТ-100", "misha@otus.ru"));
@@ -56,18 +51,19 @@ public class MainController {
 
         EntityClassMetaData<Student> studentMetaData = new EntityClassMetaDataImpl<>(Student.class);
         EntitySQLMetaData entitySQLMetaData = new EntitySQLMetaDataImpl(studentMetaData);
+        System.out.println(entitySQLMetaData.getSelectAllSql());
 
-        TableViewBuilder.bindTableView(tvMainTable, Student.class, studentMetaData);
         var transactionRunner = new TransactionRunnerJdbc(MainApplication.getDataSource());
         var dbExecutor = new DbExecutorImpl();
+        var dataTemplate = new DataTemplateJdbc<>(dbExecutor, entitySQLMetaData, studentMetaData);
 
-        EntityManagerImpl<Student> em = new EntityManagerImpl<>(transactionRunner, dbExecutor, studentMetaData, entitySQLMetaData);
+        em = new EntityManagerImpl<>(transactionRunner, dbExecutor, studentMetaData, entitySQLMetaData, dataTemplate);
 
         TableViewBuilder.bindTableView(tvMainTable, Student.class, studentMetaData);
-        studentsObservable.addAll(students);
-        tvMainTable.setItems(studentsObservable);
 
+        //studentsObservable.addAll(students);
         studentsObservable = em.createBoundList(Student.class, tvMainTable);
+        tvMainTable.setItems(studentsObservable);
 
 
 
@@ -79,10 +75,11 @@ public class MainController {
 
     @FXML
     void onAddBtnClick() {
-            var student = new Student(0, "", "", 1, "", "");
+            var student = new Student(null, "", "", 1, "", "");
             showDialog(student);
             //TODO проверить на пустого студента перед добавлением
             students.add(student);
+            em.save(student);
             taInfo.setText(students.toString());
     }
 
@@ -112,27 +109,25 @@ public class MainController {
 
     @FXML
     void onDeleteBtnClick() {
-        //Student student = studentsTable.getSelectionModel().getSelectedItem();
-        var student = students.get(0);
-        //TODO проверить на удаление пустого студента
-        students.remove(student);
-        lblInfo.setText("Студент " + student.getLastName() + " удален.");
-//        if (students.isEmpty()){
-//            btDelete.setDisable(true);
-//        }
-        taInfo.setText(students.toString());
+        Student student = tvMainTable.getSelectionModel().getSelectedItem();
+        if(student == null){
+            return;
+        }
+        em.delete(student);
+        studentsObservable.remove(student);
     }
 
     @FXML
     void onEditClick() {
-        //Student student = studentsTable.getSelectionModel().getSelectedItem();
-        var student = students.get(0);
+        Student student = tvMainTable.getSelectionModel().getSelectedItem();
+
         if(student == null){
             return;
         }
         showDialog(student);
+        em.save(student);
 
-        //studentsTable.refresh();
+        tvMainTable.refresh();
         taInfo.setText(students.toString());
     }
 

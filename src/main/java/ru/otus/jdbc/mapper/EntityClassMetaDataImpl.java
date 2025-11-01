@@ -7,9 +7,7 @@ import ru.otus.jdbc.annotations.Id;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class EntityClassMetaDataImpl<T> implements EntityClassMetaData<T> {
@@ -20,9 +18,15 @@ public class EntityClassMetaDataImpl<T> implements EntityClassMetaData<T> {
     private List<Field> fieldsWithoutId;
     private String className;
 
+    private Map<Field, String> fieldToColumnNameMap = new HashMap<>();
+
     public EntityClassMetaDataImpl(Class<T> entityClass) {
         this.entityClass = Objects.requireNonNull(entityClass, "Entity class cannot be null");
         initializeFields();
+    }
+
+    public Map<Field, String> getFieldToColumnNameMap() {
+        return fieldToColumnNameMap;
     }
 
     @Override
@@ -99,9 +103,36 @@ public class EntityClassMetaDataImpl<T> implements EntityClassMetaData<T> {
         className = extractTableName();
 
         allFields = List.of(entityClass.getDeclaredFields());
+        initFieldToColumnNameMapping();
+
         initConstructorName();
         initIdField();
         initFieldsWithoutId();
+    }
+
+    private void initFieldToColumnNameMapping() {
+        fieldToColumnNameMap.clear();
+
+        for (Field field : allFields) {
+            String columnName = extractColumnName(field);
+            fieldToColumnNameMap.put(field, columnName);
+        }
+    }
+
+    private String extractColumnName(Field field) {
+        Column columnAnnotation = field.getAnnotation(Column.class);
+        if (columnAnnotation != null) {
+            String nameFromAnnotation = columnAnnotation.name();
+            if (nameFromAnnotation != null && !nameFromAnnotation.trim().isEmpty()) {
+                return nameFromAnnotation.trim();
+            }
+        }
+        // Если аннотации @Column нет или name пустой, используем имя поля
+        return field.getName();
+    }
+
+    public String getColumnName(Field field) {
+        return fieldToColumnNameMap.get(field);
     }
 
     private String extractTableName() {

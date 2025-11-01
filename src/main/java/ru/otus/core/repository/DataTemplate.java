@@ -12,4 +12,5 @@ public interface DataTemplate<T> {
     long insert(Connection connection, T object);
 
     void update(Connection connection, T object);
+    void delete(Connection connection, T object);
 }

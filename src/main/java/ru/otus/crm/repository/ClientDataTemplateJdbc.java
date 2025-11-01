@@ -70,4 +70,9 @@ public class ClientDataTemplateJdbc implements DataTemplate<Client> {
             throw new DataTemplateException(e);
         }
     }
+
+    @Override
+    public void delete(Connection connection, Client object) {
+
+    }
 }

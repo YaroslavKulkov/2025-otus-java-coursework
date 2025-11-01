@@ -1,6 +1,8 @@
 package ru.otus.ormfx;
 
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import ru.otus.jdbc.mapper.EntityClassMetaData;
@@ -12,15 +14,13 @@ import java.util.List;
 import static org.flywaydb.core.internal.util.ClassUtils.getFieldValue;
 
 public class TableViewBuilder {
+
     public static <T> void bindTableView(TableView<T> tableView, Class<T> entityClass,
                                          EntityClassMetaData<T> metaData) {
-
         List<TableColumn<T, ?>> columns = tableView.getColumns();
 
-        // Валидируем, что все колонки соответствуют полям entity
         metaData.validateColumns(columns);
 
-        // Настраиваем cellValueFactory для каждой колонки
         for (TableColumn<T, ?> column : columns) {
             configureColumnCellValueFactory(column, metaData);
         }
@@ -43,6 +43,7 @@ public class TableViewBuilder {
                         " for column " + columnId, e);
             }
         });
+
     }
 
     private static Object getFieldValue(Object entity, Field field) throws Exception {

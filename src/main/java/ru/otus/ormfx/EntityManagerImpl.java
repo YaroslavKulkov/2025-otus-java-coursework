@@ -17,6 +17,7 @@ import ru.otus.jdbc.mapper.DataTemplateJdbc;
 import ru.otus.jdbc.mapper.EntityClassMetaData;
 import ru.otus.jdbc.mapper.EntitySQLMetaData;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,12 +29,14 @@ public class EntityManagerImpl<T>  {
     private final DbExecutor dbExecutor;
     private final EntityClassMetaData<T> entityMetaData;
     private final EntitySQLMetaData entitySQLMetaData;
+    private final DataTemplate<T> dataTemplate;
 
-    public EntityManagerImpl(TransactionRunner transactionRunner, DbExecutor dbExecutor, EntityClassMetaData<T> entityMetaData, EntitySQLMetaData entitySQLMetaData) {
+    public EntityManagerImpl(TransactionRunner transactionRunner, DbExecutor dbExecutor, EntityClassMetaData<T> entityMetaData, EntitySQLMetaData entitySQLMetaData, DataTemplate<T> dataTemplate) {
         this.transactionRunner = transactionRunner;
         this.dbExecutor = dbExecutor;
         this.entityMetaData = entityMetaData;
         this.entitySQLMetaData = entitySQLMetaData;
+        this.dataTemplate = dataTemplate;
     }
 
     public <T> ObservableList<T> findAll(Class<T> entityClass) {
@@ -58,4 +61,49 @@ public class EntityManagerImpl<T>  {
 
         return observableList;
     }
+
+    public T save(T entity) {
+        return transactionRunner.doInTransaction(connection -> {
+            try {
+                Field idField = entityMetaData.getIdField();
+                idField.setAccessible(true);
+                Object id = idField.get(entity);
+
+                if (id == null) {
+                    // Вставка новой сущности
+                    long newId = dataTemplate.insert(connection, entity);
+                    idField.set(entity, newId);
+                    return entity;
+                } else {
+                    // Обновление существующей сущности
+                    dataTemplate.update(connection, entity);
+                    return entity;
+                }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException("Failed to access ID field", e);
+            }
+        });
+    }
+
+    public void delete(T entity) {
+        transactionRunner.doInTransaction(connection -> {
+            try {
+                Field idField = entityMetaData.getIdField();
+                idField.setAccessible(true);
+                Object id = idField.get(entity);
+
+                if (id != null) {
+                    dataTemplate.delete(connection, (T) id);
+                } else {
+                    throw new RuntimeException("Cannot delete entity with null ID");
+                }
+                return null;
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException("Failed to access ID field", e);
+            }
+        });
+    }
+
+
+
 }
