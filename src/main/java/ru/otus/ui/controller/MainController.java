@@ -51,6 +51,12 @@ public class MainController {
         studentsObservable = em.createBoundList(tvMainTable);
         tvMainTable.setItems(studentsObservable);
 
+        tvMainTable.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 2) {
+                onEditBtnClick();
+            }
+        });
+
         log.info("Initialization of component successful completed");
         taInfo.setText(String.format("Инициализация прошла успешно, загружено %d записей", studentsObservable.size()));
 
@@ -107,7 +113,7 @@ public class MainController {
     }
 
     @FXML
-    void onEditClick() {
+    void onEditBtnClick() {
         Student student = tvMainTable.getSelectionModel().getSelectedItem();
         log.info("Выбран для редактирования {}", student);
         if (student == null) {
