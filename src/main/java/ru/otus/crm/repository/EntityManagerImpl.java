@@ -1,4 +1,4 @@
-package ru.otus.ormfx;
+package ru.otus.crm.repository;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -10,9 +10,6 @@ import ru.otus.jdbc.mapper.DataTemplateJdbc;
 import ru.otus.jdbc.mapper.EntityClassMetaData;
 import ru.otus.jdbc.mapper.EntityProcessingException;
 import ru.otus.jdbc.mapper.EntitySQLMetaData;
-
-import java.lang.reflect.Field;
-import java.util.List;
 
 public class EntityManagerImpl<T>  implements EntityManager<T> {
     private final TransactionRunner transactionRunner;

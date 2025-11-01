@@ -1,12 +1,12 @@
-package ru.otus.ormfx;
+package ru.otus.ui.controller;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import lombok.Setter;
 import ru.otus.crm.model.Student;
 
+/** Контроллер для окна создания нового студента. */
 public class NewStudentController {
     @FXML
     private TextField tfCourse;

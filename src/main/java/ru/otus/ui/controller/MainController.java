@@ -1,4 +1,4 @@
-package ru.otus.ormfx;
+package ru.otus.ui.controller;
 
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
@@ -15,11 +15,15 @@ import org.slf4j.LoggerFactory;
 import ru.otus.core.repository.executor.DbExecutorImpl;
 import ru.otus.core.sessionmanager.TransactionRunnerJdbc;
 import ru.otus.crm.model.Student;
+import ru.otus.crm.repository.EntityManagerImpl;
 import ru.otus.jdbc.mapper.*;
+import ru.otus.ui.MainApplication;
+import ru.otus.ui.manager.StageManager;
+import ru.otus.crm.builder.TableViewBuilder;
 
 import java.io.IOException;
 
-
+/** Контроллер главного окна приложения. */
 public class MainController {
     private static final Logger log = LoggerFactory.getLogger(MainController.class);
 
@@ -56,6 +60,9 @@ public class MainController {
     void onAddBtnClick() {
         var student = new Student(null, "", "", 1, "", "");
         showDialog(student);
+        if(student.getId() == null) {
+            return;
+        }
         em.save(student);
         studentsObservable.add(student);
         taInfo.setText("Добавлен студент " + student.getLastName() + " в группу " + student.getGroup());

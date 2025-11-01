@@ -1,4 +1,4 @@
-package ru.otus.ormfx;
+package ru.otus.crm.builder;
 
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.TableColumn;

@@ -1,4 +1,4 @@
-package ru.otus.ormfx;
+package ru.otus.ui;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -9,6 +9,7 @@ import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.otus.crm.datasource.DriverManagerDataSource;
+import ru.otus.ui.manager.StageManager;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -17,6 +18,7 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
 
+/** Выполняет инициализацию базы данных и запускает приложение. */
 public class MainApplication extends Application {
     private static final Logger log = LoggerFactory.getLogger(MainApplication.class);
 
