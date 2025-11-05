@@ -3,6 +3,7 @@ package ru.otus.jdbc.mapper;
 import ru.otus.jdbc.annotations.Id;
 
 import java.lang.reflect.Field;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class EntitySQLMetaDataImpl implements EntitySQLMetaData {
@@ -10,16 +11,21 @@ public class EntitySQLMetaDataImpl implements EntitySQLMetaData {
     private final String tableName;
     private final String idFieldName;
 
-    private String selectAllSql = "";
-    private String selectByIdSql;
-    private String insertSql;
-    private String updateSql;
+    private final String selectAllSql;
+    private final String selectByIdSql;
+    private final String insertSql;
+    private final String updateSql;
+    private final String deleteSql;
 
     public EntitySQLMetaDataImpl(EntityClassMetaData<?> entityMetaData) {
         this.entityMetaData = entityMetaData;
         this.tableName = entityMetaData.getName().toLowerCase();
         idFieldName = findIdFieldName();
-        initializeSQLQuery();
+        selectAllSql = initSelectAllSql();
+        selectByIdSql = initSelectByIdSql();
+        insertSql = initInsertSql();
+        updateSql = initUpdateSql();
+        deleteSql = initDeleteSql();
     }
 
     @Override
@@ -42,28 +48,30 @@ public class EntitySQLMetaDataImpl implements EntitySQLMetaData {
         return updateSql;
     }
 
-    private void initializeSQLQuery() {
-        initSelectAllSql();
-        initSelectByIdSql();
-        initInsertSql();
-        initUpdateSql();
+    @Override
+    public String getDeleteSql() {
+        return deleteSql;
     }
 
-    private void initUpdateSql() {
-        updateSql = "UPDATE " + tableName + " SET " + generateUpdateClause() + " WHERE " + idFieldName + " = ?";
+    private String initDeleteSql() {
+        return "DELETE FROM " + tableName + " WHERE " + idFieldName + " = ?";
     }
 
-    private void initInsertSql() {
-        insertSql = "INSERT INTO " + tableName + "(" + generateListOfFieldsName() + ") VALUES("
+    private String initUpdateSql() {
+        return "UPDATE " + tableName + " SET " + generateUpdateClause() + " WHERE " + idFieldName + " = ?";
+    }
+
+    private String initInsertSql() {
+        return "INSERT INTO " + tableName + "(" + generateListOfFieldsName() + ") VALUES("
                 + generatePlaceHolders(entityMetaData.getFieldsWithoutId().size()) + ")";
     }
 
-    private void initSelectByIdSql() {
-        selectByIdSql = "SELECT " + generateListOfFields() + " FROM " + tableName + " WHERE " + idFieldName + " = ?";
+    private String initSelectByIdSql() {
+        return "SELECT " + generateListOfFields() + " FROM " + tableName + " WHERE " + idFieldName + " = ?";
     }
 
-    private void initSelectAllSql() {
-        selectAllSql = "SELECT * FROM " + tableName;
+    private String initSelectAllSql() {
+        return "SELECT * FROM " + tableName;
     }
 
     private String findIdFieldName() {
@@ -75,7 +83,10 @@ public class EntitySQLMetaDataImpl implements EntitySQLMetaData {
     }
 
     private String generateListOfFieldsName() {
-        return entityMetaData.getFieldsWithoutId().stream().map(Field::getName).collect(Collectors.joining(", "));
+        Map<Field, String> fieldToColumnMap = entityMetaData.getFieldToColumnNameMap();
+        return entityMetaData.getFieldsWithoutId().stream()
+                .map(fieldToColumnMap::get)
+                .collect(Collectors.joining(", "));
     }
 
     private String generatePlaceHolders(int size) {
@@ -83,13 +94,16 @@ public class EntitySQLMetaDataImpl implements EntitySQLMetaData {
     }
 
     private String generateUpdateClause() {
+        Map<Field, String> fieldToColumnMap = entityMetaData.getFieldToColumnNameMap();
         return entityMetaData.getFieldsWithoutId().stream()
-                .map(field -> field.getName() + " = ?")
+                .map(field -> fieldToColumnMap.get(field) + " = ?")
                 .collect(Collectors.joining(", "));
     }
 
     private String generateListOfFields() {
         var fields = entityMetaData.getAllFields();
-        return fields.stream().map(Field::getName).collect(Collectors.joining(", "));
+        return fields.stream()
+                .map(field -> entityMetaData.getFieldToColumnNameMap().get(field))
+                .collect(Collectors.joining(", "));
     }
 }

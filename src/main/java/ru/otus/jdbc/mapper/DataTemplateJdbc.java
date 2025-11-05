@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -17,8 +18,6 @@ import java.util.Optional;
  */
 @SuppressWarnings("java:S1068")
 public class DataTemplateJdbc<T> implements DataTemplate<T> {
-
-    // Значения в поля будет записывать напрямую через рефлексию, а не через сеттеры
 
     private final DbExecutor dbExecutor;
     private final EntitySQLMetaData entitySQLMetaData;
@@ -34,7 +33,7 @@ public class DataTemplateJdbc<T> implements DataTemplate<T> {
     @Override
     public Optional<T> findById(Connection connection, long id) {
         return dbExecutor.executeSelect(
-                connection, entitySQLMetaData.getSelectByIdSql(), List.of(id), this::createEntityFromRS);
+                connection, entitySQLMetaData.getSelectByIdSql(), List.of(id), rs -> createListOfEntityFromRS(rs).getFirst());
     }
 
     @Override
@@ -78,44 +77,18 @@ public class DataTemplateJdbc<T> implements DataTemplate<T> {
         dbExecutor.executeStatement(connection, entitySQLMetaData.getUpdateSql(), listOfParams);
     }
 
-    /*private T createEntityFromRS(ResultSet rs) {
-        var fields = entityClassMetaData.getAllFields();
-        var constructor = entityClassMetaData.getConstructor();
+    @Override
+    public void delete(Connection connection, T entity) {
+        var idField = entityClassMetaData.getIdField();
+        idField.setAccessible(true);
         try {
-            if (rs.next()) {
-                T entity = constructor.newInstance();
-                for (Field field : fields) {
-                    field.setAccessible(true);
-                    field.set(entity, rs.getObject(field.getName()));
-                }
-                return entity;
-            }
-            return null;
-        } catch (SQLException | ReflectiveOperationException e) {
-            throw new DataTemplateException(e);
+            dbExecutor.executeStatement(connection, entitySQLMetaData.getDeleteSql(), List.of(idField.get(entity)));
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException("Error while deleting entity");
         }
     }
 
-    private List<T> createListOfEntityFromRS(ResultSet rs) {
-        var fields = entityClassMetaData.getAllFields();
-        var constructor = entityClassMetaData.getConstructor();
-        var listOfEntity = new ArrayList<T>();
-        try {
-            while (rs.next()) {
-                T entity = constructor.newInstance();
-                for (Field field : fields) {
-                    field.setAccessible(true);
-                    field.set(entity, rs.getObject(field.getName()));
-                }
-                listOfEntity.add(entity);
-            }
-            return listOfEntity;
-        } catch (SQLException | ReflectiveOperationException e) {
-            throw new DataTemplateException(e);
-        }
-    }*/
-
-    private T createEntityFromRS(ResultSet rs) {
+/*    private T createEntityFromRS(ResultSet rs) {
         try {
             if (rs.next()) {
                 return createEntityFromCurrentRow(rs);
@@ -124,7 +97,7 @@ public class DataTemplateJdbc<T> implements DataTemplate<T> {
         } catch (SQLException e) {
             throw new DataTemplateException(e);
         }
-    }
+    }*/
 
     private List<T> createListOfEntityFromRS(ResultSet rs) {
         try {
@@ -141,9 +114,12 @@ public class DataTemplateJdbc<T> implements DataTemplate<T> {
     private T createEntityFromCurrentRow(ResultSet rs) {
         try {
             T entity = entityClassMetaData.getConstructor().newInstance();
+            Map<Field, String> fieldToColumnMap = entityClassMetaData.getFieldToColumnNameMap();
+
             for (Field field : entityClassMetaData.getAllFields()) {
                 field.setAccessible(true);
-                field.set(entity, rs.getObject(field.getName()));
+                String columnName = fieldToColumnMap.get(field);
+                field.set(entity, rs.getObject(columnName));
             }
             return entity;
         } catch (SQLException | ReflectiveOperationException e) {

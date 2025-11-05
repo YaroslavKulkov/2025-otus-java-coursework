@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.otus.ormfx.NewStudentController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefWidth="600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.otus.ui.controller.NewStudentController">
    <children>
       <VBox prefWidth="600.0" spacing="2.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
@@ -16,12 +16,16 @@
             <TextField fx:id="tfName" />
             <Label text="Фамилия" />
             <TextField fx:id="tfLastName" />
-            <Label text="Возраст" />
-            <TextField fx:id="tfAge" />
+            <Label text="Электронная почта" />
+            <TextField fx:id="tfMail" />
+            <Label layoutX="11.0" layoutY="182.0" text="Название группы" />
+            <TextField fx:id="tfGroup" layoutX="11.0" layoutY="124.0" />
+            <Label layoutX="11.0" layoutY="229.0" text="Номер курса" />
+            <TextField fx:id="tfCourse" layoutX="11.0" layoutY="201.0" />
             <HBox prefWidth="200.0" spacing="2.0">
                <children>
-                  <Button fx:id="btOk" mnemonicParsing="false" onAction="#onOkButtonClick" text="Ok" />
-                  <Button mnemonicParsing="false" onAction="#onCancelButtonClick" text="Cancel" />
+                  <Button fx:id="btOk" defaultButton="true" mnemonicParsing="false" onAction="#onOkButtonClick" text="Ok" />
+                  <Button cancelButton="true" mnemonicParsing="false" onAction="#onCancelButtonClick" text="Cancel" />
                </children>
                <padding>
                   <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />

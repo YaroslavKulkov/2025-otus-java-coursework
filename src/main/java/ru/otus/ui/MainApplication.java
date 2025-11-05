@@ -1,6 +1,7 @@
-package ru.otus.ormfx;
+package ru.otus.ui;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -8,25 +9,20 @@ import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.otus.crm.datasource.DriverManagerDataSource;
+import ru.otus.ui.manager.StageManager;
 
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.Properties;
+import java.util.ResourceBundle;
 
+/** Выполняет инициализацию базы данных и запускает приложение. */
 public class MainApplication extends Application {
     private static final Logger log = LoggerFactory.getLogger(MainApplication.class);
 
-    private static final String URL = "jdbc:postgresql://localhost:5430/demoDB";
-    private static final String USER = "postgres";
-    private static final String PASSWORD = "postgres";
-
     private static DriverManagerDataSource dataSource;
-    private static Stage stage;
-
-    public static Stage getStage() {
-        return stage;
-    }
 
     public static DriverManagerDataSource getDataSource() {
         return dataSource;
@@ -39,24 +35,25 @@ public class MainApplication extends Application {
                 .getResourceAsStream("database.properties")) {
             Properties props = new Properties();
             props.load(input);
+            log.info("Properties loaded. Connecting to database {}", props.getProperty("db.url"));
             this.dataSource = new DriverManagerDataSource(props.getProperty("db.url"), props.getProperty("db.username"), props.getProperty("db.password"));
 
         } catch (IOException e) {
-            //TODO кинуть свой exception
             log.error("Error while loading properties", e);
+            Platform.exit();
         }
         flywayMigrations(dataSource);
     }
 
-
     @Override
     public void start(Stage stage) throws IOException {
         StageManager.setPrimaryStage(stage);
-        this.stage = stage;
-        FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("main-view.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 600, 400);
+        ResourceBundle bundle = ResourceBundle.getBundle("main", Locale.getDefault());
+        FXMLLoader fxmlLoader = new FXMLLoader(MainApplication.class.getResource("main-view.fxml"), bundle);
+        Scene scene = new Scene(fxmlLoader.load(), 700, 400);
         stage.setTitle("Demo Application");
         stage.setScene(scene);
+        log.info("Main application started with locale {}", Locale.getDefault().toLanguageTag());
         stage.show();
     }
 
@@ -64,7 +61,7 @@ public class MainApplication extends Application {
         log.info("db migration started...");
         var flyway = Flyway.configure()
                 .dataSource(dataSource)
-                .locations("classpath:/db/migration")
+                .locations("classpath:/migration")
                 .load();
         flyway.migrate();
         log.info("db migration finished.");
